@@ -298,7 +298,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
 
 
 
-summary(ca.jomoni(x = x, type = "trace", spec="longrun", ecdet = "none", season = NULL, dumvar = NULL, dummat[, -c(2:3)]), K = 5, break.matrix = dummat[,c("Dt1*Trend","Dt2*Trend")]))
+summary(ca.jomoni(x = x, type = "trace", spec="longrun", ecdet = "none", season = NULL, dumvar = NULL, dummat[, -c(2:3)]), K = 5, break.matrix = dummat[,c("Dt1*Trend","Dt2*Trend")])
 
 summary(ca.jo(dt.myVariables[, c(myvars), with = FALSE], type = "trace", spec="longrun", ecdet = "none", season = NULL, dumvar = cbind(dt.myVariables[,myexogenvar, with = FALSE], dummat[, -c(2:3)]), K = 5))
 
