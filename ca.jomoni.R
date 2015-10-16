@@ -26,6 +26,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
     stop("\nK must be at least K=2.\n")
   }
   P <- ncol(x)
+  B <- ncol(break.matrix)
   arrsel <- P
   N <- nrow(x)
   if (!is.null(season)) {
@@ -237,7 +238,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
   e <- valeigen$vector
   V <- t(Cinv) %*% e
   Vorg <- V
-  V <- sapply(1:P, function(x) V[, x]/V[1, x])
+  V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
   W <- S0K %*% V %*% solve(t(V) %*% SKK %*% V)
   PI <- S0K %*% solve(SKK)
   DELTA <- S00 - S0K %*% V %*% solve(t(V) %*% SKK %*% V) %*% 
@@ -273,19 +274,19 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
                                 " |", sep = ""), "r = 0  |")
     }
   }
-
-
-   colnames(V) <- colnames(ZK)[1:ncol(V)]
-   rownames(V) <- colnames(ZK)
-   rownames(W) <- paste(colnames(x), ".d", sep = "")
-   colnames(W) <- colnames(ZK[, 1:ncol(V)])
-   colnames(Vorg) <- colnames(ZK)
-   rownames(Vorg) <- rownames(V)
-   rownames(PI) <- rownames(W)
-   colnames(PI) <- colnames(ZK)
-   colnames(Z0) <- paste(colnames(x), ".d", sep = "")
-   colnames(R0) <- paste("R0", colnames(Z0), sep = ".")
-   colnames(RK) <- paste("RK", colnames(ZK), sep = ".")
+  
+  
+  colnames(V) <- colnames(ZK)
+  rownames(V) <- colnames(ZK)
+  rownames(W) <- paste(colnames(x), ".d", sep = "")
+  colnames(W) <- colnames(ZK)
+  colnames(Vorg) <- colnames(ZK)
+  rownames(Vorg) <- rownames(V)
+  rownames(PI) <- rownames(W)
+  colnames(PI) <- colnames(ZK)
+  colnames(Z0) <- paste(colnames(x), ".d", sep = "")
+  colnames(R0) <- paste("R0", colnames(Z0), sep = ".")
+  colnames(RK) <- paste("RK", colnames(ZK), sep = ".")
   rownames(GAMMA) <- rownames(W)
   new("ca.jo", x = x, Z0 = Z0, Z1 = Z1, ZK = ZK, type = type, 
       model = model, ecdet = ecdet, lag = K, P = arrsel, season = season, 
