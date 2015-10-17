@@ -1,4 +1,4 @@
-This is an initial and preliminary implementation of the Johansen et al. (200) methodology based on the functions provided by B. Pfaff in the R package "urca". 
+This is an initial and preliminary implementation of the Johansen et al. (2000) methodology based on the functions provided by B. Pfaff in the R package "urca". 
 Additionally you can't rely on the available critical values, but rather need to use the methods published by Giles, Godwin (2012). The R code for these calculations can be found on [1].
 I will try to make it more user-friendly and also will include some code to set up all the matrices needed to implement the methodology correctly.
 Comments, bug reports and suggestions are highly welcome!
