@@ -44,15 +44,16 @@ lagmatrix <- function(x,max.lag){
 myDtTrend <- myDt * as.vector(myTrend)
 colnames(myDtTrend) <- paste(colnames(myDt),colnames(myTrend), sep = "*")
 
-#Create matrix, which includes all the lagged dummy variable
-#Combination of the Intervention and Indication dummies do cause issues
+# Create matrix, which includes all the lagged dummy variable
+# Combination of the Intervention and Indication dummies do cause issues
+# Dummy matrix according to Joyeux(2007: 11) or equation (13)
 dummat <- matrix(NA,dt.myVariables[,.N], mylags + 4 + (mySubSample -1))
 dummat <- cbind(myTrend
                 ,myDtTrend
-                ,lagmatrix(myDt[,c("Dt1"), drop = FALSE], max.lag = mylags-1)#[,1, drop = FALSE]
-                ,lagmatrix(myDt[,c("Dt2"), drop = FALSE], max.lag = mylags-1)#[,1, drop = FALSE]
-                ,lagmatrix(myIndicationD[,c("IndiD1"), drop = FALSE], max.lag = mylags)[,1, drop = FALSE]
-#                ,lagmatrix(myIndicationD[,c("IndiD2"), drop = FALSE], max.lag = mylags)[,1, drop = FALSE]
+                ,lagmatrix(myDt[,c("Dt1"), drop = FALSE], max.lag = mylags)[,1, drop = FALSE]
+                ,lagmatrix(myDt[,c("Dt2"), drop = FALSE], max.lag = mylags)[,1, drop = FALSE]
+                ,lagmatrix(myIndicationD[,c("IndiD1"), drop = FALSE], max.lag = mylags-1)#[,1, drop = FALSE]
+                ,lagmatrix(myIndicationD[,c("IndiD2"), drop = FALSE], max.lag = mylags-1)#[,1, drop = FALSE]
 )
 
 
