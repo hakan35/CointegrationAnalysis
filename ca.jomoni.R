@@ -10,14 +10,23 @@
 # H_l(r) - Johansen et al. (2000) some or all time series follow a trending pattern
 # H_lc(r) - 
 
+# Include the possibility to define one of the five cases for the VECM
+# -  no constant  --nc
+# -  restricted constant, i.e. constant in the cointegration vector --rc
+# -  unrestricted constant, i.e. constant in the VECM equation, not in the cointegration vector --uc
+# -  constant + restricted trend, i.e. constant in the VECM equation and restricted trend in the cointegration vector --crt
+# -  constant + unrestricted trend, i.e. constant and trend in the VECM equation, not in the cointegration vector --ct
 
-ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const", "trend"), K = 2, spec = c("longrun", "transitory"), season = NULL, dumvar = NULL, break.matrix = NULL)
+
+ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc", "crt", "ct"), K = 2, spec = c("longrun", "transitory"), season = NULL, dumvar = NULL,  break.matrix = NULL)
 {
   x <- as.matrix(x)
   colnames(x) <- make.names(colnames(x))
   
-  break.matrix <- as.matrix(break.matrix)
-  colnames(break.matrix) <- make.names(colnames(break.matrix))
+  if(!is.null(break.matrix)){
+    break.matrix <- as.matrix(break.matrix)
+    colnames(break.matrix) <- make.names(colnames(break.matrix))
+  }
   type <- match.arg(type)
   ecdet <- match.arg(ecdet)
   spec <- match.arg(spec)
@@ -72,7 +81,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
       dumvar <- dumvar[-ind2, ]
     }
   }
-  if (ecdet == "trend") {
+  if (ecdet == "crt" || ecdet == "ct") {
     trend <- 1:nrow(x)
     if (NA %in% x) {
       trend <- trend[-ind2]
@@ -112,26 +121,56 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
                       25.32, 42.44, 62.99, 87.31, 114.9, 146.76, 182.82, 222.21, 
                       263.42, 310.81, 16.26, 30.45, 48.45, 70.05, 96.58, 124.75, 
                       158.49, 196.08, 234.41, 279.07, 327.45), c(11, 3, 2))
-  if (ecdet == "none") {
+  # if conditions to select the correct critical values
+  if (ecdet == "nc" || ecdet == "ct" || ecdet == "uc") {
     cvals <- cv.none
   }
-  else if (ecdet == "const") {
+  else if (ecdet == "rc") {
     cvals <- cv.const
   }
-  else if (ecdet == "trend") {
+  else if (ecdet == "crt") {
     cvals <- cv.trend
   }
-  if (ecdet == "const") {
+  # Matrix ZK incorporates the parameter, which is restricted and included in the cointegration vector
+  #Case for no restriction
+  else if (ecdet == "nc") {
     if (spec == "longrun") {
-      ZK <- cbind(x[-c((N - K + 1):N), ], 1)
+      ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
       Lnotation <- K
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+    }
+    else if (spec == "transitory") {
+      ZK <- x[-N, ][K:(N - 1), ]
+      Lnotation <- 1
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+    }
+    
+    Z1 <- Z[, -c(1:P)]
+    temp1 <- NULL
+    for (i in 1:(K - 1)) {
+      temp <- paste(colnames(x), ".dl", i, sep = "")
+      temp1 <- c(temp1, temp)
+    }
+    temp1 <- c(temp1)
+    colnames(Z1) <- temp1
+    idx <- 0:(P - 1)
+    model <- "without restrictions"
+  }
+  # Case for restricted constant
+  if (ecdet == "rc") {
+    if (spec == "longrun") {
+      ZK <- cbind(x[-c((N - K + 1):N), ], 1, break.matrix[-c((N - K + 1):N), ])
+      Lnotation <- K
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                              sep = ""), "constant", colnames(break.matrix) )
     }
     else if (spec == "transitory") {
       ZK <- cbind(x[-N, ], 1)[K:(N - 1), ]
       Lnotation <- 1
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                              sep = ""))
     }
-    colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
-                            sep = ""), "constant")
+    
     Z1 <- Z[, -c(1:P)]
     temp1 <- NULL
     for (i in 1:(K - 1)) {
@@ -139,11 +178,12 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
       temp1 <- c(temp1, temp)
     }
     colnames(Z1) <- temp1
-    P <- P + 1
+    #  P <- P + 1
     idx <- 0:(P - 2)
-    model <- "without linear trend and constant in cointegration"
+    model <- "with restricted constant in cointegration"
   }
-  else if (ecdet == "none") {
+  # Case for unrestricted constant and break matrix
+  else if (ecdet == "uc") {
     if (spec == "longrun") {
       ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
       Lnotation <- K
@@ -162,21 +202,25 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
     }
     temp1 <- c("constant", temp1)
     colnames(Z1) <- temp1
-    idx <- 0:(P - 1)
-    model <- "with linear trend"
-  }
-  else if (ecdet == "trend") {
+    model <- "with unrestricted constant"
+  } 
+  # Case for a restricted trend in the cointegration vector
+  # and a unrestricted constant
+  else if (ecdet == "crt") {
     if (spec == "longrun") {
       ZK <- cbind(x[-c((N - K + 1):N), ], trend[-c((N - 
-                                                      K + 1):N)])
+                                                      K + 1):N)], break.matrix[-c((N - K + 1):N), ])
       Lnotation <- K
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                              sep = ""), paste("trend.l", Lnotation, sep = ""), colnames(break.matrix))
     }
     else if (spec == "transitory") {
       ZK <- cbind(x[-N, ], trend[-N])[K:(N - 1), ]
       Lnotation <- 1
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                              sep = ""), paste("trend.l", Lnotation, sep = ""))
     }
-    colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
-                            sep = ""), paste("trend.l", Lnotation, sep = ""))
+    
     Z1 <- Z[, -c(1:P)]
     Z1 <- cbind(1, Z1)
     temp1 <- NULL
@@ -186,31 +230,43 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
     }
     temp1 <- c("constant", temp1)
     colnames(Z1) <- temp1
-    P <- P + 1
     idx <- 0:(P - 2)
-    model <- "with linear trend in cointegration"
+    model <- "with linear trend in cointegration and unrestricted constant"
   }
+  # Case for unrestricted constant and trend
+  else if (ecdet == "ct") {
+    if (spec == "longrun") {
+      ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
+      Lnotation <- K
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+    } else if (spec == "transitory") {
+      ZK <- x[-N, ][K:(N - 1), ]
+      Lnotation <- 1
+      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+    }
+    Z1 <- Z[, -c(1:P)]
+    Z1 <- cbind(1, trend[-c((N - K + 1):N)], Z1)
+    temp1 <- NULL
+    for (i in 1:(K - 1)) {
+      temp <- paste(colnames(x), ".dl", i, sep = "")
+      temp1 <- c(temp1, temp)
+    }
+    temp1 <- c("constant", "trend", temp1)
+    colnames(Z1) <- temp1
+    idx <- 0:(P - 2)
+    model <- "with unrestricted constant and linear trend"
+  }
+  # Setting up the matrix for the unrestricted part of the model
   N <- nrow(Z0)
   if (!(is.null(season))) {
-    if (ecdet == "const") {
-      Z1 <- cbind(dums[-(1:K), ], Z1)
-    }
-    else {
-      Z1 <- cbind(Z1[, 1], dums[-(1:K), ], Z1[, -1])
-      colnames(Z1) <- c("constant", colnames(Z1)[-1])
-    }
+    Z1 <- cbind(dums[-(1:K), ], Z1)
   }
   if (!(is.null(dumvar))) {
     tmp <- colnames(Z1)
-    if (ecdet == "const") {
-      Z1 <- cbind(dumvar[-(1:K), ], Z1)
-      colnames(Z1) <- c(colnames(dumvar), tmp)
-    }
-    else {
-      Z1 <- cbind(Z1[, 1], dumvar[-(1:K), ], Z1[, -1])
-      colnames(Z1) <- c("constant", colnames(dumvar), tmp[-1])
-    }
+    Z1 <- cbind(dumvar[-(1:K), ], Z1)
+    colnames(Z1) <- c(colnames(dumvar), tmp)
   }
+  # Calculations
   M00 <- crossprod(Z0)/N
   M11 <- crossprod(Z1)/N
   MKK <- crossprod(ZK)/N
@@ -238,7 +294,15 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("none", "const",
   e <- valeigen$vector
   V <- t(Cinv) %*% e
   Vorg <- V
-  V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
+  # Normalisation of V to the first row
+  if (!(is.null(break.matrix))){
+    V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
+  } else if(ecdet == "crt" || ecdet == "rc"){
+    V <- sapply(1:(P+1), function(x) V[, x]/V[1, x])
+  } else{
+    V <- sapply(1:P, function(x) V[, x]/V[1, x])
+  }
+  
   W <- S0K %*% V %*% solve(t(V) %*% SKK %*% V)
   PI <- S0K %*% solve(SKK)
   DELTA <- S00 - S0K %*% V %*% solve(t(V) %*% SKK %*% V) %*% 
