@@ -202,6 +202,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
     }
     temp1 <- c("constant", temp1)
     colnames(Z1) <- temp1
+    idx <- 0:(P - 2)
     model <- "with unrestricted constant"
   } 
   # Case for a restricted trend in the cointegration vector
