@@ -133,7 +133,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   }
   # Matrix ZK incorporates the parameter, which is restricted and included in the cointegration vector
   #Case for no restriction
-  else if (ecdet == "nc") {
+  if (ecdet == "nc") {
     if (spec == "longrun") {
       ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
       Lnotation <- K
@@ -157,7 +157,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
     model <- "without restrictions"
   }
   # Case for restricted constant
-  if (ecdet == "rc") {
+  else if (ecdet == "rc") {
     if (spec == "longrun") {
       ZK <- cbind(x[-c((N - K + 1):N), ], 1, break.matrix[-c((N - K + 1):N), ])
       Lnotation <- K
@@ -296,20 +296,18 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   Vorg <- V
   # Normalisation of V to the first row
   if (!(is.null(break.matrix))){
-    if(ecdet == "crt" || ecdet == "rc"){
-      V <- sapply(1:(P+B+1), function(x) V[, x]/V[1, x])
-    } else {
-      V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
-    }
-  } else{
-    if(ecdet == "crt" || ecdet == "rc"){
-      V <- sapply(1:(P+1), function(x) V[, x]/V[1, x])
-    } else {
-      V <- sapply(1:P, function(x) V[, x]/V[1, x])
-    }
-  }
-  
-  
+                if(ecdet == "crt" || ecdet == "rc"){
+                          V <- sapply(1:(P+B+1), function(x) V[, x]/V[1, x])
+                      } else {
+                          V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
+                              }
+           } else{
+                if(ecdet == "crt" || ecdet == "rc"){
+                          V <- sapply(1:(P+1), function(x) V[, x]/V[1, x])
+                      } else {
+                          V <- sapply(1:P, function(x) V[, x]/V[1, x])
+                      }
+             }
   W <- S0K %*% V %*% solve(t(V) %*% SKK %*% V)
   PI <- S0K %*% solve(SKK)
   DELTA <- S00 - S0K %*% V %*% solve(t(V) %*% SKK %*% V) %*% 
