@@ -296,12 +296,19 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   Vorg <- V
   # Normalisation of V to the first row
   if (!(is.null(break.matrix))){
-    V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
-  } else if(ecdet == "crt" || ecdet == "rc"){
-    V <- sapply(1:(P+1), function(x) V[, x]/V[1, x])
+    if(ecdet == "crt" || ecdet == "rc"){
+      V <- sapply(1:(P+B+1), function(x) V[, x]/V[1, x])
+    } else {
+      V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
+    }
   } else{
-    V <- sapply(1:P, function(x) V[, x]/V[1, x])
+    if(ecdet == "crt" || ecdet == "rc"){
+      V <- sapply(1:(P+1), function(x) V[, x]/V[1, x])
+    } else {
+      V <- sapply(1:P, function(x) V[, x]/V[1, x])
+    }
   }
+  
   
   W <- S0K %*% V %*% solve(t(V) %*% SKK %*% V)
   PI <- S0K %*% solve(SKK)
