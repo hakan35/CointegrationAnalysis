@@ -1,6 +1,7 @@
 This is an initial and preliminary implementation of the Johansen et al. (2000) methodology based on the functions provided by B. Pfaff in the R package "urca". 
-Additionally you can't rely on the available critical values, but rather need to use the methods published by Giles, Godwin (2012). The R code for these calculations can be found on [1].
-I will try to make it more user-friendly and also will include some code to set up all the matrices needed to implement the methodology correctly.
+Additionally you can't rely on the available critical values, but rather need to use the methods published by Giles, Godwin (2012). The R code for these calculations can be found at [1].
+I also included some code to set up all the necessary dummy matrices to correctly implement the methodology as described by Joyeux (2007).
+
 Comments, bug reports and suggestions are highly welcome!
 
 - Johannes
