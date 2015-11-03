@@ -19,11 +19,11 @@ vec2var.jomoni <- function (z, r = 1){
   # Number of columns in the break.matrix
   n.breaks <- ncol(z@break.matrix)
   if (is.null(n.breaks)){
-        n.breaks <- 0
-      } else {
-        n.breaks <- as.integer(ncol(z@break.matrix))
-      }
-
+    n.breaks <- 0
+  } else {
+    n.breaks <- as.integer(ncol(z@break.matrix))
+  }
+  
   # Additional if conditions to account for all cases possible with ca.jomoni
   # Take into account the number of cols, which are part of the break.matrix
   # -  no constant  --nc
@@ -44,7 +44,7 @@ vec2var.jomoni <- function (z, r = 1){
       rhs <- z@Z1 
       # Add the columns of the break.matrix
       # Add the additional constant or trend
-      rhs <- cbind(tail(z@break.matrix, nrow(z@Z1)), z@Z1)
+      rhs <- cbind(z@break.matrix[-(1:z@lag),], z@Z1)
       colnames(rhs) <- c(colnames(z@break.matrix), colnames(z@Z1))
     }
     
@@ -57,7 +57,7 @@ vec2var.jomoni <- function (z, r = 1){
       PI <- PI[, -(z@P + 1)]
       rhs <- cbind(1, z@Z1)
       colnames(rhs) <- c("constant", colnames(z@Z1))
-    
+      
     } else {
       detcoeffs <- matrix(PI[, (z@P + 1) : (z@P + n.breaks + 1) ], nrow = n.breaks + 1, ncol = ncol(z@x), 
                           byrow = TRUE)
@@ -65,7 +65,7 @@ vec2var.jomoni <- function (z, r = 1){
       colnames(detcoeffs) <- colnames(z@x)
       PI <- PI[, -((z@P + 1) : (z@P +  n.breaks + 1))]
       rhs <-  z@Z1
-      rhs <- cbind(1, tail(z@break.matrix, nrow(z@Z1)), z@Z1)
+      rhs <- cbind(1, z@break.matrix[-(1:z@lag),], z@Z1)
       colnames(rhs) <- c("constant", colnames(z@break.matrix), colnames(z@Z1))
     }
     
@@ -74,14 +74,14 @@ vec2var.jomoni <- function (z, r = 1){
       PI <- PI
       rhs <- z@Z1
     } else {
-    detcoeffs <- matrix(PI[, (z@P + 1) : (z@P +  n.breaks)], nrow = n.breaks, ncol = ncol(z@x), 
-                        byrow = TRUE)
-    rownames(detcoeffs) <- colnames(PI[, (z@P + 1) : (z@P +  n.breaks)])
-    colnames(detcoeffs) <- colnames(z@x)
-    PI <- PI[, -((z@P + 1) : (z@P +  n.breaks))]
-    rhs <- cbind(tail(z@break.matrix, nrow(z@Z1)), z@Z1)
-    colnames(rhs) <- c(colnames(z@break.matrix), colnames(z@Z1))
-    
+      detcoeffs <- matrix(PI[, (z@P + 1) : (z@P +  n.breaks)], nrow = n.breaks, ncol = ncol(z@x), 
+                          byrow = TRUE)
+      rownames(detcoeffs) <- colnames(PI[, (z@P + 1) : (z@P +  n.breaks)])
+      colnames(detcoeffs) <- colnames(z@x)
+      PI <- PI[, -((z@P + 1) : (z@P +  n.breaks))]
+      rhs <- cbind(z@break.matrix[-(1:z@lag),], z@Z1)
+      colnames(rhs) <- c(colnames(z@break.matrix), colnames(z@Z1))
+      
     }
     
   } else if (z@ecdet == "crt") {
@@ -101,9 +101,9 @@ vec2var.jomoni <- function (z, r = 1){
       rownames(detcoeffs) <- colnames(PI[, (z@P + 1) : (z@P +  n.breaks + 1)])
       colnames(detcoeffs) <- colnames(z@x)
       PI <- PI[, -((z@P + 1) : (z@P +  n.breaks + 1))]
-      rhs <- cbind( z@ZK[, z@P + 1], tail(z@break.matrix, nrow(z@Z1)), z@Z1)
+      rhs <- cbind( z@ZK[, z@P + 1], z@break.matrix[-(1:z@lag),], z@Z1)
       colnames(rhs) <- c(colnames(z@ZK)[z@P+1], colnames(z@break.matrix), colnames(z@Z1))
-     
+      
     }
   } else if (z@ecdet == "ct"){
     if(n.breaks == 0){
@@ -115,14 +115,14 @@ vec2var.jomoni <- function (z, r = 1){
       rownames(detcoeffs) <- colnames(PI[, (z@P + 1) : (z@P +  n.breaks)])
       colnames(detcoeffs) <- colnames(z@x)
       PI <- PI[, -((z@P + 1) : (z@P +  n.breaks))]
-      rhs <- cbind(tail(z@break.matrix, nrow(z@Z1)), z@Z1)
+      rhs <- cbind(z@break.matrix[-(1:z@lag),], z@Z1)
       colnames(rhs) <- c(colnames(z@break.matrix), colnames(z@Z1))
-      }
+    }
   }
-    
   
   
-
+  
+  
   if (!(is.null(eval(z@season)))) {
     seas <- eval(z@season) - 1
     season <- paste("sd", 1:seas, sep = "")
