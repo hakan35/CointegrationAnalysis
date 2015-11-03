@@ -49,8 +49,8 @@ colnames(myDtTrend) <- paste(colnames(myDt),colnames(myTrend), sep = "*")
 # Dummy matrix according to Joyeux(2007: 11) or equation (13)
 dummat <- matrix(NA,dt.myVariables[,.N], mylags + 4 + (mySubSample -1))
 dummat <- cbind(#myTrend
-  lagmatrix(myDtTrend[,c("Dt1*Trend"), drop = FALSE], max.lag = mylags)[,mylags +1, drop = FALSE]
-  ,lagmatrix(myDtTrend[,c("Dt2*Trend"), drop = FALSE], max.lag = mylags)[,mylags +1, drop = FALSE]
+  lagmatrix(myDtTrend[,c("Dt1*Trend"), drop = FALSE], max.lag = mylags)[,mylags + 1, drop = FALSE]
+  ,lagmatrix(myDtTrend[,c("Dt2*Trend"), drop = FALSE], max.lag = mylags)[,mylags + 1, drop = FALSE]
   ,lagmatrix(myDt[,c("Dt1"), drop = FALSE], max.lag = mylags)[,mylags + 1, drop = FALSE]
   ,lagmatrix(myDt[,c("Dt2"), drop = FALSE], max.lag = mylags)[,mylags + 1, drop = FALSE]
   ,lagmatrix(myIndicationD[,c("IndiD1"), drop = FALSE], max.lag = mylags-1)#[,1, drop = FALSE]
