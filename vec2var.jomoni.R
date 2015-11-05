@@ -33,9 +33,12 @@ vec2var.jomoni <- function (z, r = 1){
   # -  constant + unrestricted trend, i.e. constant and trend in the VECM equation, not in the cointegration vector --ct
   if (z@ecdet == "nc") {
     if(n.breaks == 0){
+      detcoeffs <- matrix( nrow = 0, ncol = ncol(z@x), 
+                           byrow = TRUE)
+      colnames(detcoeffs) <- colnames(z@x)
       PI <- PI
       rhs <- z@Z1
-    } else {
+      } else {
       detcoeffs <- matrix(PI[, (z@P + 1):(z@P + n.breaks)], nrow = n.breaks, ncol = ncol(z@x), 
                           byrow = TRUE)
       rownames(detcoeffs) <- colnames(PI[, (z@P + 1): (z@P + n.breaks)])
@@ -71,6 +74,9 @@ vec2var.jomoni <- function (z, r = 1){
     
   } else if (z@ecdet == "uc") { 
     if(n.breaks == 0){
+      detcoeffs <- matrix( nrow = 0, ncol = ncol(z@x), 
+                           byrow = TRUE)
+      colnames(detcoeffs) <- colnames(z@x)
       PI <- PI
       rhs <- z@Z1
     } else {
@@ -107,6 +113,9 @@ vec2var.jomoni <- function (z, r = 1){
     }
   } else if (z@ecdet == "ct"){
     if(n.breaks == 0){
+      detcoeffs <- matrix( nrow = 0, ncol = ncol(z@x), 
+                           byrow = TRUE)
+      colnames(detcoeffs) <- colnames(z@x)
       PI <- PI
       rhs <- z@Z1
     } else {
@@ -119,9 +128,6 @@ vec2var.jomoni <- function (z, r = 1){
       colnames(rhs) <- c(colnames(z@break.matrix), colnames(z@Z1))
     }
   }
-  
-  
-  
   
   if (!(is.null(eval(z@season)))) {
     seas <- eval(z@season) - 1
