@@ -1,6 +1,6 @@
 # Code to compute asymptotic p-values & critical values for the Johansen et al. (2000) modified Trace tests for cointegration in the presence of structural breaks.
 
-crit.val.ca.jomoni <- function (z, r = 1, T1 = NULL , T2 = NULL, trace.value = NULL, type = c("Hl(r)", "Hc(r)")){
+crit.val.ca.jomoni <- function (z, pr.max = 2, T1 = NULL , T2 = NULL, trace.value = NULL, type = c("Hl(r)", "Hc(r)")){
 # Written by Ryan Godwin & David Giles (Dept. of Economics, Univesity of Victoria, Canada)
 # Additional code to be called from a function by Johannes Lips
 # Last Update: 10 November 2015
@@ -44,9 +44,11 @@ traceC <- NULL
   traceC<- trace.value            # Value of Hc(r) statistic
 }
 #=========================================
-
-pr_max<- z@P - r    # Do NOT make (p-r) greater than 10 - see Johansen et al. (2000)
-
+if (pr.max < 2) {
+  stop("\nPlease set pr.max at least to 2.\n")
+} else{
+  pr_max<- pr.max    # Do NOT make (p-r) greater than 10 - see Johansen et al. (2000)
+}
 # The values of  "a" and "b" depend on the number (q-1) of structural breaks.
 # When q =1, set a=b=0, & this is the case of no structural breaks 
 # When q=2, set a=0 &  b = min[ V1 , (1-V1)] 
