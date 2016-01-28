@@ -151,11 +151,11 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
     }
     else if (spec == "transitory") {
       if(!is.null(break.matrix)){
-        ZK <- cbind(x[-N, ][K:(N - 1)], break.matrix[-c((N - K + 1):N), ])
+        ZK <- cbind(cbind(x[-N, ])[K:(N - 1), ], break.matrix[-N, ][K:(N - 1), ])
         Lnotation <- 1
         colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
       } else {
-        ZK <- cbind(x[-N, ][K:(N - 1)])
+        ZK <-  x[-c((N - K + 1):N), ]
         Lnotation <- 1
         colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))  
       }
@@ -439,6 +439,7 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
       DELTA = DELTA, GAMMA = GAMMA, R0 = R0, RK = RK, bp = NA, break.matrix = break.matrix, 
       test.name = "Johansen-Procedure", spec = spec, call = match.call())
 }
+
 
 
 summary(ca.jomoni(x = x, type = "trace", spec="longrun", ecdet = "none", season = NULL, dumvar = NULL, dummat[, -c(2:3)]), K = 5, break.matrix = dummat[,c("Dt1*Trend","Dt2*Trend")])
