@@ -1,4 +1,3 @@
-
 # The issue is that the ca.jo function per default doesn't include the dummy-trend interaction inside 
 # the levels matrix and not in the exogenous variables matrix. So we need to adjust the method accordingly 
 # or need to include the dummy*trend interaction inside the levels matrix.
@@ -17,6 +16,11 @@
 # -  constant + restricted trend, i.e. constant in the VECM equation and restricted trend in the cointegration vector --crt
 # -  constant + unrestricted trend, i.e. constant and trend in the VECM equation, not in the cointegration vector --ct
 
+# 
+# Define own class ca.jomoni
+setClass("ca.jomoni", slots = c(break.matrix = "ANY"),contains = "ca.jo")
+# and make it available to all the required namesspaces
+class.ca.jomoni <- setClass("ca.jomoni", slots = c(break.matrix = "ANY"),contains = "ca.jo")
 
 ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc", "crt", "ct"), K = 2, spec = c("longrun", "transitory"), season = NULL, dumvar = NULL,  break.matrix = NULL)
 {
@@ -135,16 +139,28 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   #Case for no restriction
   if (ecdet == "nc") {
     if (spec == "longrun") {
-      ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
-      Lnotation <- K
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      } else {
+        ZK <- x[-c((N - K + 1):N), ]
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+      }
     }
     else if (spec == "transitory") {
-      ZK <- x[-N, ][K:(N - 1), ]
-      Lnotation <- 1
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-N, ][K:(N - 1)], break.matrix[-c((N - K + 1):N), ])
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      } else {
+        ZK <- cbind(x[-N, ][K:(N - 1)])
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))  
+      }
+      
     }
-    
     Z1 <- Z[, -c(1:P)]
     temp1 <- NULL
     for (i in 1:(K - 1)) {
@@ -159,16 +175,30 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   # Case for restricted constant
   else if (ecdet == "rc") {
     if (spec == "longrun") {
-      ZK <- cbind(x[-c((N - K + 1):N), ], 1, break.matrix[-c((N - K + 1):N), ])
-      Lnotation <- K
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
-                              sep = ""), "constant", colnames(break.matrix) )
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-c((N - K + 1):N), ], 1, break.matrix[-c((N - K + 1):N), ])
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""), "constant", colnames(break.matrix) )
+      } else {
+        ZK <- cbind(x[-c((N - K + 1):N), ], 1)
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""), "constant")
+      }
     }
     else if (spec == "transitory") {
-      ZK <- cbind(x[-N, ], 1)[K:(N - 1), ]
-      Lnotation <- 1
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
-                              sep = ""))
+      if(!is.null(break.matrix)){
+        ZK <- cbind(cbind(x[-N, ], 1)[K:(N - 1), ], break.matrix[-N, ][K:(N - 1), ])
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""), "constant",colnames(break.matrix))
+      } else {
+        ZK <- cbind(x[-N, ], 1)[K:(N - 1), ]
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""),"constant")
+      }
     }
     
     Z1 <- Z[, -c(1:P)]
@@ -185,12 +215,27 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   # Case for unrestricted constant and break matrix
   else if (ecdet == "uc") {
     if (spec == "longrun") {
-      ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
-      Lnotation <- K
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      } else{
+        ZK <- x[-c((N - K + 1):N), ]
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+      }
     }
     else if (spec == "transitory") {
-      ZK <- x[-N, ][K:(N - 1), ]
-      Lnotation <- 1
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-N, ][K:(N - 1), ],break.matrix[-N, ][K:(N - 1), ])
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      } else {
+        ZK <- x[-N, ][K:(N - 1), ]
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+        
+      }
     }
     colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
     Z1 <- Z[, -c(1:P)]
@@ -209,17 +254,32 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   # and a unrestricted constant
   else if (ecdet == "crt") {
     if (spec == "longrun") {
-      ZK <- cbind(x[-c((N - K + 1):N), ], trend[-c((N - 
-                                                      K + 1):N)], break.matrix[-c((N - K + 1):N), ])
-      Lnotation <- K
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
-                              sep = ""), paste("trend.l", Lnotation, sep = ""), colnames(break.matrix))
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-c((N - K + 1):N), ], trend[-c((N - 
+                                                        K + 1):N)], break.matrix[-c((N - K + 1):N), ])
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""), paste("trend.l", Lnotation, sep = ""), colnames(break.matrix))
+      } else {
+        ZK <- cbind(x[-c((N - K + 1):N), ], trend[-c((N - 
+                                                        K + 1):N)])
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""), paste("trend.l", Lnotation, sep = ""))
+      }
     }
     else if (spec == "transitory") {
-      ZK <- cbind(x[-N, ], trend[-N])[K:(N - 1), ]
-      Lnotation <- 1
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
-                              sep = ""), paste("trend.l", Lnotation, sep = ""))
+      if(!is.null(break.matrix)){
+        ZK <- cbind(cbind(x[-N, ], trend[-N])[K:(N - 1), ], (break.matrix[-N, ])[K:(N - 1), ])
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""), paste("trend.l", Lnotation, sep = ""), colnames(break.matrix))
+      } else{
+        ZK <- cbind(x[-N, ], trend[-N])[K:(N - 1), ]
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, 
+                                sep = ""), paste("trend.l", Lnotation, sep = ""))
+      }
     }
     
     Z1 <- Z[, -c(1:P)]
@@ -237,14 +297,26 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   # Case for unrestricted constant and trend
   else if (ecdet == "ct") {
     if (spec == "longrun") {
-      ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
-      Lnotation <- K
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-c((N - K + 1):N), ], break.matrix[-c((N - K + 1):N), ])
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      } else{
+        ZK <- cbind(x[-c((N - K + 1):N), ])
+        Lnotation <- K
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+      }
     } else if (spec == "transitory") {
-      ZK <- x[-N, ][K:(N - 1), ]
-      Lnotation <- 1
-      colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
-    }
+      if(!is.null(break.matrix)){
+        ZK <- cbind(x[-N, ][K:(N - 1), ], break.matrix[-N, ][K:(N - 1), ])
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""), colnames(break.matrix))
+      } else{
+        ZK <- x[-N, ][K:(N - 1), ]
+        Lnotation <- 1
+        colnames(ZK) <- c(paste(colnames(x), ".l", Lnotation, sep = ""))
+      }
+    } 
     Z1 <- Z[, -c(1:P)]
     Z1 <- cbind(1, trend[-c((N - K + 1):N)], Z1)
     temp1 <- NULL
@@ -297,18 +369,20 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   Vorg <- V
   # Normalisation of V to the first row
   if (!(is.null(break.matrix))){
-                if(ecdet == "crt" || ecdet == "rc"){
-                          V <- sapply(1:(P+B+1), function(x) V[, x]/V[1, x])
-                      } else {
-                          V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
-                              }
-           } else{
-                if(ecdet == "crt" || ecdet == "rc"){
-                          V <- sapply(1:(P+1), function(x) V[, x]/V[1, x])
-                      } else {
-                          V <- sapply(1:P, function(x) V[, x]/V[1, x])
-                      }
-             }
+    if(ecdet == "crt" || ecdet == "rc"){
+      V <- sapply(1:(P+B+1), function(x) V[, x]/V[1, x])
+    } else {
+      V <- sapply(1:(P+B), function(x) V[, x]/V[1, x])
+    }
+  } else{
+    if(ecdet == "crt" || ecdet == "rc"){
+      V <- sapply(1:(P+1), function(x) V[, x]/V[1, x])
+    } else {
+      V <- sapply(1:P, function(x) V[, x]/V[1, x])
+    }
+  }
+  
+  
   W <- S0K %*% V %*% solve(t(V) %*% SKK %*% V)
   PI <- S0K %*% solve(SKK)
   DELTA <- S00 - S0K %*% V %*% solve(t(V) %*% SKK %*% V) %*% 
@@ -358,14 +432,13 @@ ca.jomoni <- function (x, type = c("eigen", "trace"), ecdet = c("nc", "rc", "uc"
   colnames(R0) <- paste("R0", colnames(Z0), sep = ".")
   colnames(RK) <- paste("RK", colnames(ZK), sep = ".")
   rownames(GAMMA) <- rownames(W)
-  new("ca.jo", x = x, Z0 = Z0, Z1 = Z1, ZK = ZK, type = type, 
+  new("ca.jomoni", x = x, Z0 = Z0, Z1 = Z1, ZK = ZK, type = type, 
       model = model, ecdet = ecdet, lag = K, P = arrsel, season = season, 
       dumvar = dumvar, cval = cval, teststat = as.vector(teststat), 
       lambda = lambda, Vorg = Vorg, V = V, W = W, PI = PI, 
-      DELTA = DELTA, GAMMA = GAMMA, R0 = R0, RK = RK, bp = NA, 
+      DELTA = DELTA, GAMMA = GAMMA, R0 = R0, RK = RK, bp = NA, break.matrix = break.matrix, 
       test.name = "Johansen-Procedure", spec = spec, call = match.call())
 }
-
 
 
 summary(ca.jomoni(x = x, type = "trace", spec="longrun", ecdet = "none", season = NULL, dumvar = NULL, dummat[, -c(2:3)]), K = 5, break.matrix = dummat[,c("Dt1*Trend","Dt2*Trend")])
